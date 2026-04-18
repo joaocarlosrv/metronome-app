@@ -1,3 +1,5 @@
+// preferencias do usuario
+
 import React from 'react';
 import {
   Modal,
@@ -5,7 +7,7 @@ import {
   StyleSheet,
   Switch,
   Text,
-  View,
+  View
 } from 'react-native';
 
 import { COLORS, FONTS, SOUNDS } from '../../../constants/theme';

@@ -5,6 +5,8 @@ export interface MetronomeSettings {
   subdiv: number;
   volume: number;
   soundId: SoundId;
+  soundEnabled: boolean;
+  hapticsEnabled: boolean;
   polyEnabled: boolean;
   poly1: number;
   poly2: number;
@@ -24,6 +26,8 @@ export const DEFAULT_METRONOME_SETTINGS: MetronomeSettings = {
   subdiv: 1,
   volume: 0.8,
   soundId: 'click',
+  soundEnabled: true,
+  hapticsEnabled: false,
   polyEnabled: false,
   poly1: 3,
   poly2: 4,
