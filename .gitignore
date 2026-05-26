@@ -44,12 +44,13 @@ yarn-error.*
 coverage/
 
 # editor
+*.deb
 .vscode/
 .idea/
 *.swp
 *.swo
 
-app-example
+app-example/
 
 # generated native folders
 /ios
