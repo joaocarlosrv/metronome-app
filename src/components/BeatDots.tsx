@@ -1,1 +1,1 @@
-export { BeatDots } from '../features/metronome/components/BeatDots';
+export { BeatDots } from "../features/metronome/components/BeatDots";
