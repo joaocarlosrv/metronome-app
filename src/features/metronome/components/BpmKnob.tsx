@@ -1,15 +1,15 @@
-import * as Haptics from 'expo-haptics';
-import React, { useCallback } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import * as Haptics from "expo-haptics";
+import React, { useCallback } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
 
-import { BPM_MAX, BPM_MIN, COLORS, FONTS } from '../../../constants/theme';
+import { BPM_MAX, BPM_MIN, COLORS, FONTS } from "../../../constants/theme";
 
 interface KnobProps {
   bpm: number;
@@ -67,11 +67,11 @@ export function BpmKnob({ bpm, onBpmChange, onTap }: KnobProps) {
   );
 
   const dragGesture = Gesture.Pan()
-    .onStart(event => {
+    .onStart((event) => {
       startY.value = event.absoluteY;
       startBpm.value = bpm;
     })
-    .onUpdate(event => {
+    .onUpdate((event) => {
       const delta = startY.value - event.absoluteY;
       runOnJS(updateBpm)(startBpm.value + delta * 0.7);
     });
@@ -104,19 +104,19 @@ export function BpmKnob({ bpm, onBpmChange, onTap }: KnobProps) {
 
 const styles = StyleSheet.create({
   wrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginVertical: 8,
-    position: 'relative',
+    position: "relative",
   },
   outer: {
     width: KNOB_SIZE,
     height: KNOB_SIZE,
     borderRadius: KNOB_SIZE / 2,
     backgroundColor: COLORS.panel,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.55,
     shadowRadius: 20,
@@ -127,9 +127,9 @@ const styles = StyleSheet.create({
     height: INNER_SIZE,
     borderRadius: INNER_SIZE / 2,
     backgroundColor: COLORS.bg3,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.45,
     shadowRadius: 12,
@@ -137,11 +137,11 @@ const styles = StyleSheet.create({
   },
   tickLayer: {
     ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   tick: {
-    position: 'absolute',
+    position: "absolute",
     width: 2,
     borderRadius: 999,
     top: KNOB_SIZE / 2 - 5,
@@ -151,26 +151,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     letterSpacing: 5,
     color: COLORS.text3,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   minLabel: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 14,
     left: 20,
+    borderRadius: 8,
     fontFamily: FONTS.light,
     fontSize: 10,
     letterSpacing: 2,
     color: COLORS.text3,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   maxLabel: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 14,
     right: 14,
+    borderRadius: 8,
     fontFamily: FONTS.light,
     fontSize: 10,
     letterSpacing: 2,
     color: COLORS.text3,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
 });

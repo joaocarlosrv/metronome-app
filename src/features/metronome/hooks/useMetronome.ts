@@ -1,11 +1,11 @@
 // schedule
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { BPM_MAX, BPM_MIN } from '../../../constants/theme';
-import { MetronomeSettings } from '../../../domain/metronome/config';
-import { calculateTapTempo } from '../../../engine/tap';
-import { useAudioEngine } from './useAudioEngine';
+import { BPM_MAX, BPM_MIN } from "../../../constants/theme";
+import { MetronomeSettings } from "../../../domain/metronome/config";
+import { calculateTapTempo } from "../../../engine/tap";
+import { useAudioEngine } from "./useAudioEngine";
 
 export interface MetronomeState extends MetronomeSettings {
   bpm: number;
@@ -37,16 +37,22 @@ export function useMetronome(
 
   const stateRef = useRef(state);
   const onBpmChangeRef = useRef(options.onBpmChange);
-  useEffect(() => { stateRef.current = state; }, [state]);
-  useEffect(() => { onBpmChangeRef.current = options.onBpmChange; }, [options.onBpmChange]);
-  useEffect(() => { setVolume(state.volume); }, [setVolume, state.volume]);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+  useEffect(() => {
+    onBpmChangeRef.current = options.onBpmChange;
+  }, [options.onBpmChange]);
+  useEffect(() => {
+    setVolume(state.volume);
+  }, [setVolume, state.volume]);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentBeat, setCurrentBeat] = useState(0);
   const [polyBeat1, setPolyBeat1] = useState(0);
   const [polyBeat2, setPolyBeat2] = useState(0);
   const [accelProgress, setAccelProgress] = useState(0);
-  const [accelStatusText, setAccelStatusText] = useState('');
+  const [accelStatusText, setAccelStatusText] = useState("");
 
   const isPlayingRef = useRef(false);
   const schedRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -55,13 +61,16 @@ export function useMetronome(
 
   const nextNoteMs = useRef(0);
   const curBeatRef = useRef(0);
+  const lastPlayedBeatRef = useRef(-1);
   const curSubRef = useRef(0);
   const pb1Ref = useRef(0);
   const pb2Ref = useRef(0);
   const accelT0Ref = useRef(0);
   const tapTimesRef = useRef<number[]>([]);
 
-  useEffect(() => { init(); }, [init]);
+  useEffect(() => {
+    init();
+  }, [init]);
 
   const syncBpm = useCallback((bpm: number) => {
     const nextBpm = Math.max(BPM_MIN, Math.min(BPM_MAX, bpm));
@@ -70,9 +79,18 @@ export function useMetronome(
   }, []);
 
   const stopScheduler = useCallback(() => {
-    if (schedRef.current) { clearInterval(schedRef.current); schedRef.current = null; }
-    if (drawRef.current) { cancelAnimationFrame(drawRef.current); drawRef.current = null; }
-    if (accelRef.current) { clearInterval(accelRef.current); accelRef.current = null; }
+    if (schedRef.current) {
+      clearInterval(schedRef.current);
+      schedRef.current = null;
+    }
+    if (drawRef.current) {
+      cancelAnimationFrame(drawRef.current);
+      drawRef.current = null;
+    }
+    if (accelRef.current) {
+      clearInterval(accelRef.current);
+      accelRef.current = null;
+    }
   }, []);
 
   const scheduler = useCallback(() => {
@@ -84,13 +102,20 @@ export function useMetronome(
       const beat = curBeatRef.current;
       const sub = curSubRef.current;
 
-      const isAccent = beat === 0 && sub === 0;
+      const accentIndex = Math.max(
+        0,
+        Math.min(current.beats - 1, current.accentBeat - 1),
+      );
+      const isAccent = beat === accentIndex && sub === 0;
       const isBeat = sub === 0;
       const isSub = !isBeat;
       const isPoly1 = current.polyEnabled && pb1Ref.current === 0 && isBeat;
       const isPoly2 = current.polyEnabled && pb2Ref.current === 0 && isBeat;
 
       playBeat(current.soundId, isAccent, isSub, isPoly1, isPoly2);
+      if (isBeat) {
+        lastPlayedBeatRef.current = beat;
+      }
 
       curSubRef.current = (sub + 1) % current.subdiv;
       if (curSubRef.current === 0) {
@@ -104,7 +129,7 @@ export function useMetronome(
   }, [playBeat]);
 
   const drawLoop = useCallback(() => {
-    setCurrentBeat(curBeatRef.current);
+    setCurrentBeat(lastPlayedBeatRef.current);
     setPolyBeat1(pb1Ref.current);
     setPolyBeat2(pb2Ref.current);
     if (isPlayingRef.current) {
@@ -134,10 +159,12 @@ export function useMetronome(
         current.accelIntervalSec;
 
       setAccelProgress(totalSec > 0 ? Math.min(1, elapsed / totalSec) : 1);
-      const remaining = Math.round(current.accelIntervalSec - (elapsed % current.accelIntervalSec));
+      const remaining = Math.round(
+        current.accelIntervalSec - (elapsed % current.accelIntervalSec),
+      );
 
       if (newBpm >= current.accelEndBpm) {
-        setAccelStatusText('Final BPM reached');
+        setAccelStatusText("Final BPM reached");
         clearInterval(accelRef.current!);
         accelRef.current = null;
       } else {
@@ -154,7 +181,7 @@ export function useMetronome(
       setIsPlaying(false);
       stopScheduler();
       setCurrentBeat(-1);
-      setAccelStatusText('');
+      setAccelStatusText("");
       setAccelProgress(0);
       return;
     }
@@ -162,6 +189,7 @@ export function useMetronome(
     isPlayingRef.current = true;
     setIsPlaying(true);
     curBeatRef.current = 0;
+    lastPlayedBeatRef.current = -1;
     curSubRef.current = 0;
     pb1Ref.current = 0;
     pb2Ref.current = 0;
@@ -178,7 +206,9 @@ export function useMetronome(
 
   const tapTempo = useCallback(() => {
     const now = performance.now();
-    tapTimesRef.current = tapTimesRef.current.filter(time => now - time < 3000);
+    tapTimesRef.current = tapTimesRef.current.filter(
+      (time) => now - time < 3000,
+    );
     tapTimesRef.current.push(now);
 
     const bpm = calculateTapTempo(tapTimesRef.current, BPM_MIN, BPM_MAX);
@@ -200,4 +230,3 @@ export function useMetronome(
     tapTempo,
   };
 }
-

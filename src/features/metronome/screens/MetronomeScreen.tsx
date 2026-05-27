@@ -1,5 +1,5 @@
-import * as Haptics from 'expo-haptics';
-import React, { useCallback, useState } from 'react';
+import * as Haptics from "expo-haptics";
+import React, { useCallback, useState } from "react";
 import {
   Pressable,
   SafeAreaView,
@@ -7,25 +7,27 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
+} from "react-native";
 
-import { BPM_MAX, BPM_MIN, COLORS, FONTS } from '../../../constants/theme';
+import { BPM_MAX, BPM_MIN, COLORS, FONTS } from "../../../constants/theme";
 import {
   DEFAULT_BPM,
   DEFAULT_METRONOME_SETTINGS,
   SettingsPanelTab,
-} from '../../../domain/metronome/config';
-import { BeatDots } from '../components/BeatDots';
-import { BpmKnob } from '../components/BpmKnob';
-import { PanelSettings, SettingsPanel } from '../components/SettingsPanel';
-import { useAudioEngine } from '../hooks/useAudioEngine';
-import { useMetronome } from '../hooks/useMetronome';
+} from "../../../domain/metronome/config";
+import { BeatDots } from "../components/BeatDots";
+import { BpmKnob } from "../components/BpmKnob";
+import { PanelSettings, SettingsPanel } from "../components/SettingsPanel";
+import { useAudioEngine } from "../hooks/useAudioEngine";
+import { useMetronome } from "../hooks/useMetronome";
 
 export default function MetronomeScreen() {
   const [bpm, setBpm] = useState(DEFAULT_BPM);
-  const [settings, setSettings] = useState<PanelSettings>(DEFAULT_METRONOME_SETTINGS);
+  const [settings, setSettings] = useState<PanelSettings>(
+    DEFAULT_METRONOME_SETTINGS,
+  );
   const [panelOpen, setPanelOpen] = useState(false);
-  const [panelTab, setPanelTab] = useState<SettingsPanelTab>('sound');
+  const [panelTab, setPanelTab] = useState<SettingsPanelTab>("sound");
 
   const { preview } = useAudioEngine();
 
@@ -33,8 +35,11 @@ export default function MetronomeScreen() {
     bpm,
     beats: settings.beats,
     subdiv: settings.subdiv,
+    accentBeat: settings.accentBeat,
     soundId: settings.soundId,
     volume: settings.volume,
+    soundEnabled: settings.soundEnabled,
+    hapticsEnabled: settings.hapticsEnabled,
     polyEnabled: settings.polyEnabled,
     poly1: settings.poly1,
     poly2: settings.poly2,
@@ -59,7 +64,11 @@ export default function MetronomeScreen() {
   }, []);
 
   const handleSettingsChange = useCallback((patch: Partial<PanelSettings>) => {
-    setSettings(previous => ({ ...previous, ...patch }));
+    setSettings((previous) => {
+      const next = { ...previous, ...patch };
+      next.accentBeat = Math.max(1, Math.min(next.accentBeat, next.beats));
+      return next;
+    });
   }, []);
 
   const openPanel = useCallback((tab: SettingsPanelTab) => {
@@ -73,7 +82,11 @@ export default function MetronomeScreen() {
 
       <View style={styles.container}>
         <View style={styles.topbar}>
-          <Pressable onPress={() => openPanel('beats')} hitSlop={12} style={styles.iconButton}>
+          <Pressable
+            onPress={() => openPanel("beats")}
+            hitSlop={12}
+            style={styles.iconButton}
+          >
             <View style={styles.listIcon}>
               <View style={styles.listLine} />
               <View style={[styles.listLine, styles.shortLine]} />
@@ -90,7 +103,11 @@ export default function MetronomeScreen() {
             <Text style={styles.logoText}>METROPULSE</Text>
           </View>
 
-          <Pressable onPress={() => openPanel('sound')} hitSlop={12} style={styles.iconButton}>
+          <Pressable
+            onPress={() => openPanel("sound")}
+            hitSlop={12}
+            style={styles.iconButton}
+          >
             <Text style={styles.menuText}>...</Text>
           </Pressable>
         </View>
@@ -101,11 +118,13 @@ export default function MetronomeScreen() {
           beats={settings.beats}
           currentBeat={currentBeat}
           isPlaying={isPlaying}
+          accentBeat={settings.accentBeat}
+          onSelectAccent={(beat) => handleSettingsChange({ accentBeat: beat })}
         />
 
         <View style={styles.dividerRow}>
           <View style={styles.divLine} />
-          <Pressable onPress={() => openPanel('beats')} hitSlop={12}>
+          <Pressable onPress={() => openPanel("beats")} hitSlop={12}>
             <Text style={styles.gearText}>SET</Text>
           </Pressable>
           <View style={styles.divLine} />
@@ -113,6 +132,7 @@ export default function MetronomeScreen() {
 
         <View style={styles.bpmRow}>
           <Pressable
+            style={({ pressed }) => [styles.bpmBtn, pressed && styles.bpmBtnPressed]}
             onPress={() => {
               handleBpmChange(bpm - 1);
               Haptics.selectionAsync();
@@ -123,7 +143,7 @@ export default function MetronomeScreen() {
             }}
             hitSlop={12}
           >
-            <Text style={styles.bpmAdj}>-</Text>
+            <Text style={styles.bpmBtnText}>-</Text>
           </Pressable>
 
           <View style={styles.bpmCenter}>
@@ -132,6 +152,7 @@ export default function MetronomeScreen() {
           </View>
 
           <Pressable
+            style={({ pressed }) => [styles.bpmBtn, pressed && styles.bpmBtnPressed]}
             onPress={() => {
               handleBpmChange(bpm + 1);
               Haptics.selectionAsync();
@@ -142,14 +163,18 @@ export default function MetronomeScreen() {
             }}
             hitSlop={12}
           >
-            <Text style={styles.bpmAdj}>+</Text>
+            <Text style={styles.bpmBtnText}>+</Text>
           </Pressable>
         </View>
 
         <BpmKnob bpm={bpm} onBpmChange={handleBpmChange} onTap={tapTempo} />
 
         <View style={styles.bottomBar}>
-          <Pressable style={styles.bottomAction} onPress={() => openPanel('sound')} hitSlop={8}>
+          <Pressable
+            style={styles.bottomAction}
+            onPress={() => openPanel("sound")}
+            hitSlop={8}
+          >
             <Text style={styles.bottomActionText}>SOUND</Text>
           </Pressable>
 
@@ -158,11 +183,15 @@ export default function MetronomeScreen() {
             onPress={togglePlay}
           >
             <Text style={[styles.playIcon, isPlaying && styles.playIconActive]}>
-              {isPlaying ? 'STOP' : 'PLAY'}
+              {isPlaying ? "STOP" : "PLAY"}
             </Text>
           </Pressable>
 
-          <Pressable style={styles.bottomAction} onPress={() => openPanel('poly')} hitSlop={8}>
+          <Pressable
+            style={styles.bottomAction}
+            onPress={() => openPanel("poly")}
+            hitSlop={8}
+          >
             <Text style={styles.bottomActionText}>POLY</Text>
           </Pressable>
         </View>
@@ -192,16 +221,16 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bg,
   },
   topbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 22,
     paddingTop: 40,
     paddingBottom: 8,
   },
   iconButton: {
     minWidth: 32,
-    alignItems: 'center',
+    alignItems: "center",
   },
   listIcon: {
     gap: 6,
@@ -219,13 +248,13 @@ const styles = StyleSheet.create({
     width: 9,
   },
   logo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   logoMark: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+    flexDirection: "row",
+    alignItems: "flex-end",
     gap: 3,
     height: 18,
   },
@@ -257,13 +286,13 @@ const styles = StyleSheet.create({
     fontSize: 40,
     letterSpacing: 2,
     color: COLORS.text,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 6,
   },
   dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 18,
     marginTop: 6,
   },
@@ -280,23 +309,40 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
   },
   bpmRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 28,
     paddingHorizontal: 24,
     marginTop: 8,
     marginBottom: 4,
   },
-  bpmAdj: {
-    fontFamily: FONTS.thin,
-    fontSize: 32,
-    color: COLORS.text2,
+  bpmBtn: {
+    minWidth: 66,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: COLORS.text3,
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 12,
-    paddingVertical: 6,
+  },
+  bpmBtnPressed: {
+    borderColor: COLORS.accent,
+    shadowColor: COLORS.accent,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  bpmBtnText: {
+    fontFamily: FONTS.semi,
+    fontSize: 24,
+    color: COLORS.text2,
+    lineHeight: 26,
   },
   bpmCenter: {
-    alignItems: 'center',
+    alignItems: "center",
     minWidth: 130,
   },
   bpmNum: {
@@ -311,17 +357,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     letterSpacing: 3,
     color: COLORS.text3,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     marginTop: 2,
     marginBottom: 4,
   },
   bottomBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 34,
     paddingBottom: 20,
-    marginTop: 'auto',
+    marginTop: "auto",
   },
   bottomAction: {
     padding: 7,
@@ -338,8 +384,8 @@ const styles = StyleSheet.create({
     borderRadius: 27,
     borderWidth: 1.5,
     borderColor: COLORS.text3,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 18,
   },
   playBtnActive: {
@@ -359,4 +405,3 @@ const styles = StyleSheet.create({
     color: COLORS.accent,
   },
 });
-
