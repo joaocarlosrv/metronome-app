@@ -1,4 +1,4 @@
-export type SoundId = "click" | "ping" | "stick" | "woodblock" | "drum";
+export type SoundId = "stick" | "clave" | "cowbell";
 
 export interface MetronomeSettings {
   beats: number;
@@ -27,7 +27,7 @@ export const DEFAULT_METRONOME_SETTINGS: MetronomeSettings = {
   subdiv: 1,
   accentBeat: 1,
   volume: 0.8,
-  soundId: "click",
+  soundId: "stick",
   soundEnabled: true,
   hapticsEnabled: false,
   polyEnabled: false,

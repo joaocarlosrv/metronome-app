@@ -132,7 +132,10 @@ export default function MetronomeScreen() {
 
         <View style={styles.bpmRow}>
           <Pressable
-            style={({ pressed }) => [styles.bpmBtn, pressed && styles.bpmBtnPressed]}
+            style={({ pressed }) => [
+              styles.bpmBtn,
+              pressed && styles.bpmBtnPressed,
+            ]}
             onPress={() => {
               handleBpmChange(bpm - 1);
               Haptics.selectionAsync();
@@ -152,7 +155,10 @@ export default function MetronomeScreen() {
           </View>
 
           <Pressable
-            style={({ pressed }) => [styles.bpmBtn, pressed && styles.bpmBtnPressed]}
+            style={({ pressed }) => [
+              styles.bpmBtn,
+              pressed && styles.bpmBtnPressed,
+            ]}
             onPress={() => {
               handleBpmChange(bpm + 1);
               Haptics.selectionAsync();

@@ -1,3 +1,5 @@
+export { SOUND_OPTIONS as SOUNDS } from "../domain/metronome/sounds";
+
 export const COLORS = {
   bg: '#3d5068',
   bg2: '#344559',
@@ -39,14 +41,6 @@ export const FONTS = {
   regular: 'Nunito_400Regular',
   semi: 'Nunito_600SemiBold',
 };
-
-export const SOUNDS = [
-  { id: 'click', label: 'Click' },
-  { id: 'ping', label: 'Ping' },
-  { id: 'stick', label: 'Stick' },
-  { id: 'woodblock', label: 'Wooden Block' },
-  { id: 'drum', label: 'Drum' },
-];
 
 export const BPM_MIN = 30;
 export const BPM_MAX = 300;

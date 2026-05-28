@@ -86,12 +86,15 @@ export function SettingsPanel({
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <View style={styles.panel}>
+      <Pressable style={styles.backdrop} onPress={onClose}>
+        <Pressable
+          style={styles.panel}
+          onPress={(event) => event.stopPropagation()}
+        >
           <View style={styles.header}>
             <Text style={styles.title}>Settings</Text>
-            <Pressable onPress={onClose}>
-              <Text style={styles.close}>Close</Text>
+            <Pressable onPress={onClose} style={styles.closeButton} hitSlop={12}>
+              <Text style={styles.close}>×</Text>
             </Pressable>
           </View>
 
@@ -226,8 +229,8 @@ export function SettingsPanel({
               <Text style={styles.meta}>{accelStatusText || 'Acceleration idle'}</Text>
             </View>
           )}
-        </View>
-      </View>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 }
@@ -259,8 +262,15 @@ const styles = StyleSheet.create({
   },
   close: {
     color: COLORS.accent,
-    fontFamily: FONTS.regular,
-    fontSize: 15,
+    fontFamily: FONTS.semi,
+    fontSize: 28,
+    lineHeight: 28,
+  },
+  closeButton: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tabs: {
     flexDirection: 'row',
@@ -352,4 +362,3 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 });
-

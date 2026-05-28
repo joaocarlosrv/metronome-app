@@ -3,9 +3,7 @@ import * as Haptics from "expo-haptics";
 import { useCallback, useRef } from "react";
 
 import { SoundId } from "../../../domain/metronome/config";
-
-const accentAudio = require("../../../assets/audio/accent.wav");
-const beatAudio = require("../../../assets/audio/beat.wav");
+import { SOUND_PACKS, type SoundPack } from "../../../domain/metronome/sounds";
 
 const engineState = {
   initialized: false,
@@ -13,12 +11,16 @@ const engineState = {
 };
 
 function impactForSound(soundId: SoundId, isAccent: boolean) {
-  if (soundId === "drum" || isAccent) {
+  if (isAccent) {
     return Haptics.ImpactFeedbackStyle.Medium;
   }
 
-  if (soundId === "woodblock" || soundId === "stick") {
+  if (soundId === "stick") {
     return Haptics.ImpactFeedbackStyle.Light;
+  }
+
+  if (soundId === "cowbell") {
+    return Haptics.ImpactFeedbackStyle.Medium;
   }
 
   return Haptics.ImpactFeedbackStyle.Soft;
@@ -29,8 +31,13 @@ function trigger(task: Promise<unknown>) {
 }
 export function useAudioEngine() {
   const initializedRef = useRef(engineState.initialized);
-  const accentSoundRef = useRef<Audio.Sound | null>(null);
-  const beatSoundRef = useRef<Audio.Sound | null>(null);
+  const soundRefs = useRef<
+    Record<SoundId, { accent: Audio.Sound | null; beat: Audio.Sound | null }>
+  >({
+    stick: { accent: null, beat: null },
+    clave: { accent: null, beat: null },
+    cowbell: { accent: null, beat: null },
+  });
 
   const init = useCallback(async () => {
     if (initializedRef.current) {
@@ -44,15 +51,30 @@ export function useAudioEngine() {
       playThroughEarpieceAndroid: false,
     });
 
-    const { sound: accentSound } = await Audio.Sound.createAsync(accentAudio, {
-      volume: engineState.volume,
-    });
-    const { sound: beatSound } = await Audio.Sound.createAsync(beatAudio, {
-      volume: engineState.volume,
-    });
+    await Promise.all(
+      (Object.entries(SOUND_PACKS) as [SoundId, SoundPack][]).map(
+        async ([soundId, pack]) => {
+          const { sound: accentSound } = await Audio.Sound.createAsync(
+            pack.files.accent,
+            {
+              volume: engineState.volume,
+            },
+          );
+          const { sound: beatSound } = await Audio.Sound.createAsync(
+            pack.files.beat,
+            {
+              volume: engineState.volume,
+            },
+          );
 
-    accentSoundRef.current = accentSound;
-    beatSoundRef.current = beatSound;
+          soundRefs.current[soundId] = {
+            accent: accentSound,
+            beat: beatSound,
+          };
+        },
+      ),
+    );
+
     initializedRef.current = true;
     engineState.initialized = true;
   }, []);
@@ -73,7 +95,8 @@ export function useAudioEngine() {
       isPoly1 = false,
       isPoly2 = false,
     ) => {
-      const sound = isAccent ? accentSoundRef.current : beatSoundRef.current;
+      const pack = soundRefs.current[soundId];
+      const sound = isAccent ? pack?.accent : pack?.beat;
 
       if (sound && engineState.volume > 0) {
         await sound.setPositionAsync(0);
@@ -98,7 +121,8 @@ export function useAudioEngine() {
 
   const preview = useCallback(
     async (soundId: SoundId) => {
-      const sound = accentSoundRef.current ?? beatSoundRef.current;
+      const pack = soundRefs.current[soundId];
+      const sound = pack?.accent ?? pack?.beat;
 
       if (sound && engineState.volume > 0) {
         await sound.setPositionAsync(0);
@@ -113,13 +137,18 @@ export function useAudioEngine() {
     const nextVolume = Math.max(0, Math.min(1, value));
     engineState.volume = nextVolume;
 
-    if (accentSoundRef.current) {
-      trigger(accentSoundRef.current.setVolumeAsync(nextVolume));
-    }
+    (Object.values(soundRefs.current) as {
+      accent: Audio.Sound | null;
+      beat: Audio.Sound | null;
+    }[]).forEach(({ accent, beat }) => {
+      if (accent) {
+        trigger(accent.setVolumeAsync(nextVolume));
+      }
 
-    if (beatSoundRef.current) {
-      trigger(beatSoundRef.current.setVolumeAsync(nextVolume));
-    }
+      if (beat) {
+        trigger(beat.setVolumeAsync(nextVolume));
+      }
+    });
   }, []);
 
   return { init, playBeat, preview, setVolume };
